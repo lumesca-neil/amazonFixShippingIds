@@ -1,9 +1,13 @@
 const Fs = require('fs');
 const CsvReadableStream = require('csv-reader');
+const {NetSuiteCalls} = require('./NetSuiteCalls.js')
+const dotenv = require('dotenv')
 
 class AmazonFixShippingID {
     constructor() {
+        dotenv.config()
         this.data = './data/3874252018921.csv'
+        this.nsFixer = new NetSuiteCalls(true)
     }
 
     async ReadCSV(filename) {
@@ -35,7 +39,7 @@ class AmazonFixShippingID {
             "orderid": item['Amazon Order Id'],
             "quantity": item['Dispatched Quantity'],
             "sku": item['Merchant SKU'],
-            "shipmentid": item['Shipment Item ID']
+            "shipmentid": item['Shipment ID']
         }
         return data;
     }
@@ -45,7 +49,12 @@ class AmazonFixShippingID {
         for( let index in this.orderLines ) {
             let item = this.orderLines[index]
             let anUpdate = this.getUpdateJson(item)
-            console.log(anUpdate)
+            console.log(`//--------------- Updating: ${item['Amazon Order Id']} ----------------------/`)
+            try {
+                console.log( 'ok', await this.nsFixer.fixShippingID(anUpdate) )
+            } catch(error) {
+            console.log('error',error)
+            } 
         }
     }
 }

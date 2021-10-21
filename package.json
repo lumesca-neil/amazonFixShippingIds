@@ -20,6 +20,8 @@
   "dependencies": {
     "amazon-mws": "0.0.27",
     "chai": "^4.3.4",
-    "csv-reader": "^1.0.8"
+    "csv-reader": "^1.0.8",
+    "dotenv": "^10.0.0",
+    "nsrestlet": "^2.0.1"
   }
 }

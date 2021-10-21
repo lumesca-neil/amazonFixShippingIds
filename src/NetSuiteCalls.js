@@ -1,6 +1,4 @@
 const nsrestlet = require("nsrestlet");
-const fs = require("fs");
-const MwsApi = require("amazon-mws");
 
 class NetSuiteCalls {
     constructor( isLive ) {
@@ -22,51 +20,27 @@ class NetSuiteCalls {
                 consumerSecret: process.env.NS_CONSUMER_SECRET_SB
             }
         }
-        
-        let invoicesUrlSettings = false
+
+        let fixAmazonShippingIds = false
         if( this.isLive ) {
-            invoicesUrlSettings = {
+            fixAmazonShippingIds = {
                 url: this.getNSURL(
-                    process.env.NS_INVOICE_SCRIPTID,
-                    process.env.NS_INVOICE_DEPLOY
+                    process.env.NS_FIX_SHIPINGID_LIVE,
+                    process.env.NS_FIX_DEPLOY_LIVE
                 ),
             }
         } else {
-            invoicesUrlSettings = {
+            fixAmazonShippingIds = {
                 url: this.getNSURL(
-                    process.env.NS_INVOICE_SCRIPTID_SB,
-                    process.env.NS_INVOICE_DEPLOY_SB
+                    process.env.NS_FIX_SHIPINGID_SB,
+                    process.env.NS_FIX_DEPLOY_SB
                 ),
             }
         }
-
-        this.nsInvoicesLink = nsrestlet.createLink(
+        this.nsfixAmazonShippinLink = nsrestlet.createLink(
             this.accountSettings,
-            invoicesUrlSettings
+            fixAmazonShippingIds
         );
-
-        let invoiceUploadedSettings = false
-        if( this.isLive ) {
-            invoiceUploadedSettings = {
-                url: this.getNSURL(
-                    process.env.NS_INVOICE_COMPLETEDID,
-                    process.env.NS_INVOICE_DEPLOY
-                ),
-            }
-        } else {
-            invoiceUploadedSettings = {
-                url: this.getNSURL(
-                    process.env.NS_INVOICE_COMPLETEDID_SB,
-                    process.env.NS_INVOICE_DEPLOY_SB
-                ),
-            }
-        }
-        this.nsinvoiceUploadedLink = nsrestlet.createLink(
-            this.accountSettings,
-            invoiceUploadedSettings
-        );
-
-        this.debugLimitedNSIDS = false;
     }
 
     getNSURL(script, deploy) {
@@ -79,42 +53,33 @@ class NetSuiteCalls {
         return `${endpoint}/app/site/hosting/restlet.nl?script=${script}&deploy=${deploy}`;
     }
 
-    async getNSSearch(searchId) {
-        let self = this;
-        let promise = new Promise(function (resolve, reject) {
+    async fixShippingID(update) {
+        let aPromise = new Promise((resolve, reject) => {
             try {
-                let script = 132;
-                let deploy = 1;
-                let options = { search_id: searchId };
-    
-                let searchUrl = {
-                    url: self.getNSURL(script, deploy),
-                };
-                let nsLink = nsrestlet.createLink(self.accountSettings, searchUrl);
-    
-                let allData = [];
-                nsLink.get(options, function (error, body) {
+                this.nsfixAmazonShippinLink.put(update, function (error, body) {
                     if (error) {
-                        reject(error);
-                        return;
+                        reject(error)
                     }
-    
-                    for (let rowIndex in body.data) {
-                        let rowData = {};
-                        for (let columnIndex in body.data[rowIndex].columns) {
-                            rowData[columnIndex] =
-                                body.data[rowIndex].columns[columnIndex];
-                        }
-                        allData.push(rowData);
+
+                    let result = false
+                    try {
+                        result = JSON.parse(body)
+                    } catch(error) {
+                        reject( new Error(`Failed to parse JSON result from netsuite for ${update.orderid}`))
                     }
-                    resolve(allData);
-                });
+
+                    if( result.success === 1 ) {
+                        resolve({...update,"result":result})
+                    } else {
+                        reject( new Error(`Failed update to Netsuite for order ${update.orderid} message:${result.message}`))
+                    }
+                })
             } catch(error) {
-                reject(error);
+                reject(error)
             }
         });
 
-        return promise;
+        return aPromise;
     }
 }
 
