@@ -1,0 +1,25 @@
+{
+  "name": "amazonFixShippingIds",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lumesca-neil/amazonFixShippingIds.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lumesca-neil/amazonFixShippingIds/issues"
+  },
+  "homepage": "https://github.com/lumesca-neil/amazonFixShippingIds#readme",
+  "dependencies": {
+    "amazon-mws": "0.0.27",
+    "chai": "^4.3.4",
+    "csv-reader": "^1.0.8"
+  }
+}
